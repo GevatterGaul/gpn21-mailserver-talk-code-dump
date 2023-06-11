@@ -1,0 +1,6 @@
+---
+rspamd_config_directory: /srv/data/rspamd/config
+rspamd_encoded_password: "{{ vault_rspamd_encoded_password }}"
+rspamd_password: "{{ vault_rspamd_password }}"
+clamav_config_directory: /srv/data/clamav/config
+...

@@ -1,0 +1,8 @@
+---
+- hosts: mailer
+  roles: 
+    - common
+    - name: dockerhost
+      vars:
+        network_subnet: 172.200.0.0/16
+...

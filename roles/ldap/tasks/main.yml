@@ -1,0 +1,15 @@
+---
+- name: Ensure apacheds container
+  docker_container:
+    name: apacheds
+    image: gevattergaul/apacheds:latest
+    published_ports:
+      - "127.0.0.1:389:389"
+    networks_cli_compatible: yes
+    networks:
+      - name: internal
+    volumes:
+      - "{{ apacheds_data_directory }}:/opt/apacheds/instances"
+    labels:
+      traefik.enable: "false"
+...

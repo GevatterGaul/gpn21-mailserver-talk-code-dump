@@ -1,0 +1,5 @@
+---
+postfix_config_directory: /srv/data/postfix/config
+behringer_email_cert_path: "/etc/ssl/certs/behringer.email.crt"
+behringer_email_key_path: "/etc/ssl/private/behringer.email.key"
+...

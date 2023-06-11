@@ -1,0 +1,5 @@
+---
+docker_data_uid: "1100"
+docker_data_gid: "1100"
+docker_data_user_name: ddata
+...

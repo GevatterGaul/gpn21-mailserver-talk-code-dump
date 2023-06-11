@@ -1,0 +1,7 @@
+---
+- hosts: mailer
+  roles: 
+    - name: pure-postfix
+      vars:
+        network_subnet: 172.200.0.0/16
+...

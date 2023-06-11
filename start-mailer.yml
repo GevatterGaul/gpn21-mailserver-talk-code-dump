@@ -1,0 +1,111 @@
+---
+- name: Start Mailer on Azure
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  tasks:
+  - name: Ensure resource group
+    azure_rm_resourcegroup:
+      name: example-mailer
+      location: northcentralus
+  - name: Ensure security group for mailer
+    azure_rm_securitygroup:
+      name: example-mailer-secgroup
+      resource_group: example-mailer
+      purge_rules: yes
+      purge_default_rules: yes
+      rules:
+        - name: AllowIncomingHTTP
+          protocol: Tcp
+          destination_port_range: 80
+          access: Allow
+          priority: 102
+          direction: Inbound
+        - name: AllowIncomingHTTPS
+          protocol: Tcp
+          destination_port_range: 443
+          access: Allow
+          priority: 101
+          direction: Inbound
+        - name: AllowIncomingSSH
+          protocol: Tcp
+          destination_port_range: 22
+          access: Allow
+          priority: 100
+          direction: Inbound
+        - name: AllowIncomingSMTP
+          protocol: Tcp
+          destination_port_range: 25
+          access: Allow
+          priority: 103
+          direction: Inbound
+        - name: AllowIncomingSubmission
+          protocol: Tcp
+          destination_port_range: 587
+          access: Allow
+          priority: 104
+          direction: Inbound
+        - name: AllowIncomingIMAP
+          protocol: Tcp
+          destination_port_range: 143
+          access: Allow
+          priority: 105
+          direction: Inbound
+        - name: AllowIncomingIMAPS
+          protocol: Tcp
+          destination_port_range: 993
+          access: Allow
+          priority: 106
+          direction: Inbound
+  - name: Ensure virtual network
+    azure_rm_virtualnetwork:
+      name: example-mailer-vnet
+      resource_group: example-mailer
+      address_prefixes_cidr:
+        - "10.8.0.0/16"
+  - name: Ensure mailer subnet
+    azure_rm_subnet:
+      name: example-mailer-subnet
+      virtual_network_name: example-mailer-vnet
+      resource_group: example-mailer
+      address_prefix_cidr: "10.8.0.0/24"
+  - name: Create a public ip address
+    azure_rm_publicipaddress:
+      name: mailer-public-ip
+      resource_group: example-mailer
+      allocation_method: Static
+      # change this to the prefix of your choice
+      domain_name: example
+  - name: Ensure mailer interface
+    azure_rm_networkinterface:
+      name: mailer-if
+      resource_group: example-mailer
+      virtual_network_name: example-mailer-vnet
+      subnet_name: example-mailer-subnet
+      security_group: example-mailer-secgroup
+      ip_configurations:
+        - name: ipconfig01
+          public_ip_address_name: mailer-public-ip
+          primary: yes
+  - name: Ensure mailer
+    azure_rm_virtualmachine:
+      name: mailer
+      resource_group: example-mailer
+      # the only currently allowed value
+      admin_username: azureadmin
+      # for security
+      ssh_password_enabled: no
+      ssh_public_keys:
+      - path: /home/azureadmin/.ssh/authorized_keys
+        key_data: ssh-rsa ...
+      vm_size: Standard_B2ms
+      image:
+        offer: 0001-com-ubuntu-server-jammy
+        publisher: Canonical
+        sku: "22_04-lts-gen2"
+        version: 22.04.202306010
+      # we use the interface generated before
+      network_interface_names:
+        - mailer-if
+      managed_disk_type: Standard_LRS
+...

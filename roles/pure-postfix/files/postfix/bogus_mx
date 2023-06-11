@@ -1,0 +1,15 @@
+# invalid sender IPs
+
+# IPv4
+0.0.0.0/8               550     Local Broadcast
+1.0.0.0/8               550     IANA reserved
+10.0.0.0/8              550     Lokales Netz
+127.0.0.0/8             550     localhost
+224.0.0.0/4             550     Multicast Netzwerk
+#46.38.235.33/32         550     Lokales Netz
+
+# IPv6
+::/128                  550     Keine Adresse
+ff00::/8                550     Multicast
+fec0::/10               550     Site Local Unicast
+fc00::/7                550     Unique Local Unicast

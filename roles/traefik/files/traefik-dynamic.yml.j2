@@ -1,0 +1,10 @@
+---
+{% if certificates %}
+tls:
+  certificates:
+{% for certificate in certificates %}
+    - certFile: {{ certificate['certFile'] }}
+      keyFile: {{ certificate['keyFile'] }}
+{% endfor %}
+{% endif %}
+...

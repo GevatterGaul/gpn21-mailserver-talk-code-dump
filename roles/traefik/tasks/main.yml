@@ -1,0 +1,67 @@
+---
+- name: Ensure traefik config directory
+  file:
+    name: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ traefik_config_directory }}"
+    - "{{ traefik_config_directory }}/dynamic"
+
+- name: Check acme.json
+  stat:
+    path: "{{ traefik_config_directory }}/acme.json"
+  register: acme_json
+
+- name: Ensure acme.json
+  file:
+    name: "{{ traefik_config_directory }}/acme.json"
+    state: touch
+    mode: 0600
+  when: not acme_json.stat.exists
+
+
+- name: Copy traefik config
+  template:
+    src: files/traefik.yml.j2
+    dest: "{{ traefik_config_directory }}/traefik.yml"
+  register: copy_traefik_config
+
+- name: Copy traefik dynamic config
+  template:
+    src: files/traefik-dynamic.yml.j2
+    dest: "{{ traefik_config_directory }}/dynamic/traefik-dynamic.yml"
+  register: copy_traefik_dynamic_config
+
+- name: Bring up traefik
+  docker_container:
+    name: traefik
+    image: traefik:v2.8.1
+    recreate: "{{ copy_traefik_config.changed or copy_traefik_dynamic_config.changed }}"
+    networks:
+      - name: internal
+    networks_cli_compatible: yes
+    restart_policy: unless-stopped
+    published_ports: "{{ published_ports }}"
+    volumes:
+      - "{{ traefik_config_directory }}:/etc/traefik"
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      traefik.enable: "false"
+
+- name: Ensure traefik certs dumper directory
+  file:
+    name: "{{ traefik_certs_dumper_directory }}"
+    state: directory
+
+- name: Download certs dumper
+  get_url:
+    url: "https://github.com/ldez/traefik-certs-dumper/releases/download/v2.7.0/traefik-certs-dumper_v2.7.0_linux_amd64.tar.gz"
+    dest: /opt
+    checksum: sha256:aa960a09ed3cd3dd6f32bab2821b9a66bf9069f5d1febef109adc685e499f447
+
+- name: Unpack certs dumper
+  unarchive:
+    src: /opt/traefik-certs-dumper_v2.7.0_linux_amd64.tar.gz
+    dest: "{{ traefik_certs_dumper_directory }}"
+    remote_src: yes
+...

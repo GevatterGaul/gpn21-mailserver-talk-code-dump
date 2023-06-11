@@ -1,0 +1,12 @@
+---
+- name: Ensure redis container
+  docker_container:
+    name: redis
+    image: redis:7.0.4-alpine
+    command: --maxmemory 512mb
+    networks:
+      - name: internal
+    networks_cli_compatible: yes
+    labels:
+      traefik.enable: "false"
+...

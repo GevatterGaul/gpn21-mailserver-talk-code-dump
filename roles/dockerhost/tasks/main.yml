@@ -1,0 +1,30 @@
+---
+- name: Add docker
+  apt:
+    name:
+      - docker.io
+      - python3-docker
+    state: present
+
+- name: Ensure docker internal network
+  docker_network:
+    name: internal
+    appends: yes
+    driver_options:
+      com.docker.network.bridge.name: docker-internal
+    ipam_config:
+      - subnet: "{{ network_subnet }}"
+
+- name: Ensure group for docker data
+  group:
+    name: "{{ docker_data_user_name }}"
+    gid: "{{ docker_data_gid }}"
+    state: present
+
+- name: Ensure user for docker data
+  user:
+    name: "{{ docker_data_user_name }}"
+    comment: "User for docker data in mounts"
+    uid: "{{ docker_data_uid }}"
+    group: "{{ docker_data_user_name }}"
+...

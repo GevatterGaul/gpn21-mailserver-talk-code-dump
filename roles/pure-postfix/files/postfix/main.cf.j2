@@ -1,0 +1,64 @@
+mydomain = molybdaen4men.de
+myhostname = smtp.$mydomain
+
+### local mail distribution
+mydestination = localhost.$mydomain localhost
+relay_domains =
+
+mynetworks = 127.0.0.0/8, {{ network_subnet }}, localhost
+
+### Advertise myself as main virtnix that also handles domain email
+myorigin = $mydomain
+smtpd_banner = $myhostname ESMTP
+
+### all virtual addresses: load from ldap and send directly to dovecot
+virtual_mailbox_domains = $mydomain
+virtual_transport = lmtp:dovecot:24
+virtual_alias_maps = lmdb:/etc/postfix/virtual
+
+### use dovecot to authenticate outgoing email senders, tls only
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = inet:dovecot:10010
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_tls_security_options = noanonymous
+smtpd_tls_auth_only = yes
+smtpd_tls_ciphers = high
+
+### ssl configuration: opportunistic for sending and receiving
+smtpd_tls_cert_file = {{ behringer_email_cert_path }}
+smtpd_tls_key_file = {{ behringer_email_key_path }}
+smtpd_tls_security_level = may
+smtp_tls_security_level = may
+
+### postfix filtering
+smtpd_helo_required = yes
+disable_vrfy_command = yes
+smtpd_delay_reject = yes
+
+smtpd_recipient_restrictions =
+    permit_mynetworks
+    permit_sasl_authenticated
+    reject_non_fqdn_helo_hostname
+    reject_non_fqdn_sender
+    reject_non_fqdn_recipient
+    reject_unknown_sender_domain
+    reject_unknown_recipient_domain
+    reject_unauth_destination
+    check_helo_access regexp:/etc/postfix/helo_checks
+    check_sender_mx_access cidr:/etc/postfix/bogus_mx
+    check_recipient_access lmdb:/etc/postfix/roleaccount_exceptions
+    reject_unverified_recipient
+    permit
+
+smtpd_data_restrictions =
+    reject_unauth_pipelining
+    reject_multi_recipient_bounce
+    permit
+
+smtpd_milters = inet:rspamd:11332
+milter_default_action = accept
+milter_protocol = 6
+
+### logging and debugging: docker friendly logging and minimal error output
+notify_classes = resource, software
+maillog_file = /dev/stdout

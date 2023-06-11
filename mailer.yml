@@ -1,0 +1,20 @@
+---
+- hosts: mailer
+  roles: 
+    - ldap
+    - dovecot
+    - postfix
+    - rspamd
+    - role: traefik
+      vars:
+        published_ports:
+          - 80:80
+          - 443:443
+          - 8800:8800
+        entrypoints:
+          web: ":80"
+          websecure: ":443"
+          sogo_addressbook: ":8800"
+        certificates: []
+    - sogo
+...

@@ -1,0 +1,10 @@
+---
+- name: Add some system packages
+  apt:
+    name:
+      - htop
+      - net-tools
+      - screen
+      - mutt
+      - vim
+...

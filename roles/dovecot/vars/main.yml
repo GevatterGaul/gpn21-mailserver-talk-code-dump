@@ -1,0 +1,6 @@
+---
+dovecot_data_directory: /srv/data/dovecot/data
+dovecot_config_directory: /srv/data/dovecot/config
+m4m_email_cert_path: "/etc/ssl/certs/m4m.crt"
+m4m_email_key_path: "/etc/ssl/private/m4m.key"
+...

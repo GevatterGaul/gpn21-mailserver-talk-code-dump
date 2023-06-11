@@ -1,0 +1,39 @@
+---
+- name: Ensure directories
+  file:
+    name: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ dovecot_data_directory }}"
+    - "{{ dovecot_config_directory }}"
+
+- name: Render dovecot config file
+  template:
+    src: files/dovecot.conf
+    dest: "{{ dovecot_config_directory }}/dovecot.conf"
+  register: dovecot_config
+
+- name: Copy dovecot ldap config file
+  copy:
+    src: files/dovecot-ldap.conf
+    dest: "{{ dovecot_config_directory }}/dovecot-ldap.conf"
+  register: dovecot_ldap_config
+
+- name: Ensure dovecot container
+  docker_container:
+    name: dovecot
+    image: gevattergaul/dovecot:latest
+    recreate: "{{ dovecot_config.changed or dovecot_ldap_config.changed}}"
+    networks_cli_compatible: yes
+    published_ports:
+      - "0.0.0.0:993:993"
+    networks:
+      - name: internal
+    volumes:
+      - "{{ dovecot_data_directory }}:/var/spool/mail"
+      - "{{ dovecot_config_directory }}:/etc/dovecot"
+      - "/srv/data/certs/certs/molybdaen4men.de.crt:{{ m4m_email_cert_path }}"
+      - "/srv/data/certs/private/molybdaen4men.de.key:{{ m4m_email_key_path }}"
+    labels:
+      traefik.enable: "false"
+...

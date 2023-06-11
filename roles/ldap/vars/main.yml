@@ -1,0 +1,4 @@
+---
+apacheds_data_directory: /srv/data/apacheds/data
+apacheds_admin_password: "{{ vault_apacheds_admin_password }}"
+...

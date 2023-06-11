@@ -1,0 +1,5 @@
+/^smtp\.molybdaen4men\.de$/             550 Don't use my hostname.
+/^molybdaen4men\.de$/                   550 Don't use my hostname.
+/^20\.25\.222\.99$/                     550 Don't use my IP address.
+/^\[20\.25\.222\.99\]$/                 550 Don't use my IP address.
+/^[0-9.]+$/                             550 Your client is not RFC 2821 compliant.

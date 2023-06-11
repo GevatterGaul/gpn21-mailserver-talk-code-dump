@@ -1,0 +1,97 @@
+{
+  /* *********************  Main SOGo configuration file  **********************
+   *                                                                           *
+   * Since the content of this file is a dictionary in OpenStep plist format,  *
+   * the curly braces enclosing the body of the configuration are mandatory.   *
+   * See the Installation Guide for details on the format.                     *
+   *                                                                           *
+   * C and C++ style comments are supported.                                   *
+   *                                                                           *
+   * This example configuration contains only a subset of all available        *
+   * configuration parameters. Please see the installation guide more details. *
+   *                                                                           *
+   * ~sogo/GNUstep/Defaults/.GNUstepDefaults has precedence over this file,    *
+   * make sure to move it away to avoid unwanted parameter overrides.          *
+   *                                                                           *
+   * **************************************************************************/
+
+  /* Database configuration (mysql://, postgresql:// or oracle://) */
+  SOGoProfileURL = "mysql://{{ sogo_db_user }}:{{ sogo_db_password }}@mariadb/sogo/sogo_user_profile";
+  OCSFolderInfoURL = "mysql://{{ sogo_db_user }}:{{ sogo_db_password }}@mariadb/sogo/sogo_folder_info";
+  OCSSessionsFolderURL = "mysql://{{ sogo_db_user }}:{{ sogo_db_password }}@mariadb/sogo/sogo_sessions_folder";
+
+  /* Mail */
+  //SOGoDraftsFolderName = Drafts;
+  //SOGoSentFolderName = Sent;
+  //SOGoTrashFolderName = Trash;
+  //SOGoJunkFolderName = Junk;
+  SOGoIMAPServer = "imaps://molybdaen4men.de:993";
+  //SOGoSieveServer = "sieve://127.0.0.1:4190";
+  SOGoSMTPServer = "smtp://postfix:25";
+  SOGoMailDomain = molybdaen4men.de;
+  SOGoMailingMechanism = smtp;
+  //SOGoForceExternalLoginWithEmail = NO;
+  //SOGoMailSpoolPath = /var/spool/sogo;
+  //NGImap4ConnectionStringSeparator = "/";
+
+  /* Notifications */
+  //SOGoAppointmentSendEMailNotifications = NO;
+  //SOGoACLsSendEMailNotifications = NO;
+  //SOGoFoldersSendEMailNotifications = NO;
+
+  /* Authentication */
+  SOGoPasswordChangeEnabled = YES;
+
+  /* LDAP authentication example */
+  SOGoUserSources = (
+    {
+      type = ldap;
+      CNFieldName = cn;
+      UIDFieldName = cn;
+      IDFieldName = cn; // first field of the DN for direct binds
+      bindFields = (cn); // array of fields to use for indirect binds
+      baseDN = "ou=users,o=tng";
+      bindDN = "uid=sogo,ou=serviceusers,o=tng";
+      bindPassword = {{ sogo_ldap_password }};
+      // bindAsCurrentUser = YES;
+      canAuthenticate = YES;
+      displayName = "Local Users";
+      hostname = "ldap://apacheds:389";
+      id = virtnix;
+      isAddressBook = YES;
+      userPasswordAlgorithm = ssha256;
+    }
+  );
+
+  /* Web Interface */
+  SOGoPageTitle = molybdaen4men.de;
+  //SOGoVacationEnabled = YES;
+  //SOGoForwardEnabled = YES;
+  //SOGoSieveScriptsEnabled = YES;
+  //SOGoMailAuxiliaryUserAccountsEnabled = YES;
+  //SOGoTrustProxyAuthentication = NO;
+  //SOGoXSRFValidationEnabled = NO;
+
+  /* General - SOGoTimeZone *MUST* be defined */
+  SOGoLanguage = English;
+  SOGoTimeZone = Europe/Berlin;
+  //SOGoCalendarDefaultRoles = (
+  //  PublicDAndTViewer,
+  //  ConfidentialDAndTViewer
+  //);
+  //SOGoSuperUsernames = (sogo1, sogo2); // This is an array - keep the parens!
+  //SxVMemLimit = 384;
+  //WOPidFile = "/var/run/sogo/sogo.pid";
+  SOGoMemcachedHost = "memcached";
+
+  /* Debug */
+  SOGoDebugRequests = YES;
+  SoDebugBaseURL = YES;
+  ImapDebugEnabled = YES;
+  LDAPDebugEnabled = YES;
+  PGDebugEnabled = YES;
+  MySQL4DebugEnabled = YES;
+  //SOGoUIxDebugEnabled = YES;
+  //WODontZipResponse = YES;
+  //WOLogFile = /var/log/sogo/sogo.log;
+}

@@ -1,0 +1,51 @@
+---
+- name: Ensure directories
+  file:
+    name: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ postfix_config_directory }}"
+    - "{{ postfix_config_directory }}/dynamicmaps.cf.d"
+
+- name: Render postfix main config file
+  template:
+    src: files/postfix/main.cf.j2
+    dest: "{{ postfix_config_directory }}/main.cf"
+  register: postfix_main_config
+
+- name: Copy plain postfix config files
+  copy:
+    src: "files/postfix/{{ item }}"
+    dest: "{{ postfix_config_directory }}/{{ item }}"
+  loop:
+    - aliases
+    - bogus_mx
+    - dynamicmaps.cf
+    - dynamicmaps.cf.d/ldap
+    - dynamicmaps.cf.d/lmdb
+    - helo_checks
+    - master.cf
+    - postfix-files
+    - roleaccount_exceptions
+    - virtual
+  register: postfix_static_config
+
+- name: Ensure postfix container
+  docker_container:
+    name: postfix
+    image: gevattergaul/postfix:latest
+    recreate: "{{ postfix_main_config.changed or postfix_static_config.changed}}"
+    networks_cli_compatible: yes
+    published_ports:
+      - "0.0.0.0:25:25"
+      - "0.0.0.0:465:465"
+      - "0.0.0.0:587:587"
+    networks:
+      - name: internal
+    volumes:
+      - "{{ postfix_config_directory }}:/etc/postfix"
+      - "/etc/ssl/certs/ssl-cert-snakeoil.pem:{{ behringer_email_cert_path }}"
+      - "/etc/ssl/private/ssl-cert-snakeoil.key:{{ behringer_email_key_path }}"
+    labels:
+      traefik: "false"
+...

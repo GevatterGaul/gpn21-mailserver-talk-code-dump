@@ -1,0 +1,59 @@
+---
+- name: Include rspamd vars
+  include_vars:
+    dir: vars
+
+- name: Ensure directories
+  file:
+    name: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ rspamd_config_directory }}/local.d"
+    - "{{ clamav_config_directory }}"
+
+- name: Copy plain rspamd config files
+  copy:
+    src: "files/rspamd/local.d/{{ item }}"
+    dest: "{{ rspamd_config_directory }}/local.d/{{ item }}"
+  loop:
+    - antivirus.conf
+    - logging.inc
+    - redis.conf
+    - worker-proxy.inc
+    - worker-normal.inc
+  register: rspamd_static_config
+
+- name: Copy plain clamav config files
+  copy:
+    src: "files/clamav/{{ item }}"
+    dest: "{{ clamav_config_directory }}/{{ item }}"
+  loop:
+    - clamd.conf
+  register: clamav_static_config
+
+- name: Ensure clamav container
+  docker_container:
+    name: clamav
+    image: clamav/clamav:0.105
+    recreate: "{{ clamav_static_config.changed }}"
+    networks_cli_compatible: yes
+    networks:
+      - name: internal
+    volumes:
+      - "{{ clamav_config_directory }}/clamd.conf:/etc/clamav/clamd.conf"
+    labels:
+      traefik.enable: "false"
+
+- name: Ensure rspamd container
+  docker_container:
+    name: rspamd
+    image: gevattergaul/rspamd:latest
+    recreate: "{{ rspamd_static_config.changed }}"
+    networks_cli_compatible: yes
+    networks:
+      - name: internal
+    volumes:
+      - "{{ rspamd_config_directory }}/local.d:/etc/rspamd/local.d"
+    labels:
+      traefik: "false"
+...

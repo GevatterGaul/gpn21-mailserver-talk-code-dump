@@ -1,0 +1,5 @@
+sogo_config_directory: /srv/data/sogo/config
+sogo_apache_config_directory: /srv/data/sogo/apache_config
+sogo_db_user: sogo
+sogo_db_password: "{{ vault_sogo_db_password }}"
+sogo_ldap_password: "{{ vault_sogo_ldap_password }}"

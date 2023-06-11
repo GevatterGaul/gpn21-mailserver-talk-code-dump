@@ -1,0 +1,27 @@
+---
+global:
+  sendAnonymousUsage: no
+log:
+  level: WARN
+providers:
+  docker:
+    network: internal
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+entryPoints:
+{% for name, address in entrypoints.items() %}
+  {{ name }}:
+    address: "{{ address }}"
+{% endfor %}
+tls:
+  stores:
+    default: {}
+certificatesResolvers:
+  letsEncryptResolver:
+    acme:
+      email: admin@benjamin-behringer.de
+      storage: /etc/traefik/acme.json
+      httpChallenge:
+        entryPoint: web
+...

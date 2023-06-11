@@ -1,0 +1,92 @@
+---
+- name: Include sogo vars
+  include_vars:
+    dir: vars
+
+- name: Ensure Mariadb container
+  docker_container:
+    name: mariadb
+    image: mariadb:10.9.2
+    networks_cli_compatible: yes
+    networks:
+      - name: internal
+    env:
+      MARIADB_PASSWORD: "{{ sogo_db_password }}"
+      MARIADB_ROOT_PASSWORD: "{{ sogo_db_password }}"
+      MARIADB_DATABASE: sogo
+      MARIADB_USER: "{{ sogo_db_user }}"
+    labels:
+      traefik.enable: "false"
+
+- name: Bring up memcached
+  docker_container:
+    name: memcached
+    image: memcached:1.6.20-alpine
+    networks:
+      - name: internal
+    networks_cli_compatible: yes
+    labels:
+      traefik.enable: "false"
+
+- name: Ensure directories
+  file:
+    name: "{{ item }}"
+    state: directory
+    owner: 90
+    group: 101
+  loop:
+    - "{{ sogo_config_directory }}"
+    - "{{ sogo_apache_config_directory }}"
+
+- name: Render sogo config file
+  template:
+    src: files/sogo/sogo.conf.j2
+    dest: "{{ sogo_config_directory }}/sogo.conf"
+  register: sogo_config
+
+- name: Render sogo apache config files
+  template:
+    src: files/apache2/{{ item }}
+    dest: "{{ sogo_apache_config_directory }}/{{ item }}"
+  register: sogo_apache_config
+  loop:
+    - sogo.conf
+    - sogo-addressbook.conf
+
+- name: Ensure SOGo container
+  docker_container:
+    name: sogo
+    image: gevattergaul/sogo:latest
+    networks_cli_compatible: yes
+    restart: "{{ sogo_config.changed or sogo_apache_config.changed }}"
+    networks:
+      - name: internal
+    volumes:
+      - "{{ sogo_config_directory }}:/etc/sogo"
+      - "{{ sogo_apache_config_directory }}/sogo.conf:/etc/apache2/sites-enabled/sogo.conf"
+      - "{{ sogo_apache_config_directory }}/sogo-addressbook.conf:/etc/apache2/sites-enabled/sogo-addressbook.conf"
+    env:
+      HTTP_HOST: molybdaen4men.de
+    labels:
+      # Change this to your domain
+      traefik.http.routers.sogo.rule: "Host(`molybdaen4men.de`)"
+      traefik.http.routers.sogo.entrypoints: "web"
+      traefik.http.routers.sogo.middlewares: sogo-redirect-websecure
+      traefik.http.routers.sogo.service: "sogo-secure"
+      traefik.http.middlewares.sogo-redirect-websecure.redirectscheme.scheme: "https"
+      traefik.http.middlewares.sogo-redirect-websecure.redirectscheme.permanent: "true"
+      traefik.http.routers.sogo-secure.rule: "Host(`molybdaen4men.de`)"
+      traefik.http.routers.sogo-secure.tls: "true"
+      traefik.http.routers.sogo-secure.tls.domains[0].main: "molybdaen4men.de"
+      traefik.http.routers.sogo-secure.entrypoints: "websecure"
+      traefik.http.routers.sogo-secure.service: "sogo-secure"
+      traefik.http.routers.sogo-secure.tls.certresolver: letsEncryptResolver
+      traefik.http.services.sogo-secure.loadbalancer.server.port: "80"
+      traefik.http.routers.sogo-addressbook.rule: "Host(`molybdaen4men.de`)"
+      traefik.http.routers.sogo-addressbook.tls: "true"
+      traefik.http.routers.sogo-addressbook.tls.domains[0].main: "molybdaen4men.de"
+      traefik.http.routers.sogo-addressbook.entrypoints: "sogo_addressbook"
+      traefik.http.routers.sogo-addressbook.service: sogo-addressbook
+      traefik.http.routers.sogo-addressbook.tls.certresolver: letsEncryptResolver
+      traefik.http.services.sogo-addressbook.loadbalancer.server.port: "8800"
+...

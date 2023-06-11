@@ -1,0 +1,5 @@
+---
+traefik_config_directory: /srv/data/traefik/config
+traefik_certs_dumper_directory: /opt/traefik-certs-dumper
+traefik_certs_dump_directory: /srv/data/certs
+...
